@@ -1,0 +1,81 @@
+---
+title: "GroupProject1"
+output: 
+  pdf_document: 
+    fig_height: 5.5
+    fig_width: 7
+    highlight: kate
+    latex_engine: xelatex
+---
+
+Q2
+
+```{r}
+library("lpSolve")
+maturityYear = c(1,2,2,3,4,5,5,6,7,8)
+# Price of each bond
+c = c(102,99,101,98,98,104,100,101,102,94)
+# Coupon rate 
+coupon = c(5,3.5,5,3.5,4,9,6,8,9,7)
+# Liability schedule
+b = c(12000,18000,20000,20000,16000,15000,12000,10000)
+dir = rep("=",8)
+
+# Matrix of cash flow from coupon
+couponTol = matrix(0,8,10)
+for(i in 1:10){
+  couponTol[1:maturityYear[i], i] = 1
+}
+couponTol = couponTol %*% diag(coupon)
+
+# Matrix of cash flow from principle at maturity
+maturityTol = matrix(0,8,10)
+for(i in 1:10){
+  maturityTol[maturityYear[i],i] = 100
+}
+
+# Total cash inflows
+A = couponTol + maturityTol
+
+s = lp("min",c,A,dir,b)
+s$solution
+```
+
+Q3
+
+```{r}
+dedication <- function(P,C,M,L){
+  
+  t = length(L)
+  n = length(M)
+  
+  couponTol = matrix(0,t,n)
+  for(i in 1:10){
+    couponTol[1:M[i],i] = 1
+  }
+  couponTol = couponTol %*% diag(C)
+  
+  maturityTol = matrix(0,t,n)
+  for(i in 1:10){
+    maturityTol[j = M[i],i] = 100
+  }
+  
+  dir = rep("=",t)
+  s = lp("min",P,couponTol + maturityTol,dir,L)
+  if (s$status ==0){
+    return(s$solution)
+  }
+  # Catch Exceptions
+  else(
+    print("No feasible solution found")
+  )
+}
+
+# Test the function with Q2
+dedication(c,coupon,maturityYear,b)
+
+# Test with exception case
+maturityYear = rep(1,10)
+coupon = rep(0,10)
+dedication(c,coupon,maturityYear,b)
+```
